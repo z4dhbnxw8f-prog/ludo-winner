@@ -1,14 +1,12 @@
 # Ludo Winner
 
-A Vite + React multiplayer-ready Ludo prototype with:
+A Vite + React 2-player Ludo app with:
 
-- a 4-player board
-- turn-based dice rolls
-- token movement and captures
-- free-play and coin-staked tables
-- a mock real-money coin shop
-- a match activity feed
-- an in-room chat box
+- real-time room codes for two devices
+- live match synchronization through a built-in Node room server
+- turn-based dice rolls, token movement, captures, and chat
+- free-play rooms and coin-staked rooms
+- a mock in-room coin shop
 
 ## Run locally
 
@@ -17,21 +15,32 @@ npm install
 npm run dev
 ```
 
+That starts:
+
+- the Vite client on `http://localhost:5173`
+- the room server on `http://localhost:3001`
+
+## Test on two devices
+
+1. Run `npm run dev` on your computer.
+2. On device one, open the Vite URL and create a room.
+3. On device two, open `http://YOUR_COMPUTER_IP:5173`.
+4. Enter the room code from device one.
+
+Both devices will stay synchronized for moves, chat, room status, and mock purchases.
+
 ## What is included
 
-- Local multiplayer on one device for 4 players
-- Editable player names
+- 2-player multiplayer with room codes
+- Red vs Green seat assignment
+- Live SSE room updates from the Node server
 - Free mode that always stays available
-- Coin table setup with configurable stakes and winner payout
-- Mock shop purchases that top up in-game currency balances
-- Ludo movement rules for leaving home, entering the lane, and finishing tokens
-- Capture handling on non-safe tiles
-- A polished responsive UI
+- Coin room setup with winner payout
+- Mock shop purchases that sync across devices
 
-## Good next steps for true online multiplayer
+## Next steps for production
 
-- Add Socket.IO or Supabase Realtime for synchronized turns and chat
-- Move match state into a backend room store
-- Add authentication and room codes
-- Replace mock coin purchases with a real payment processor and server-side wallet ledger
-- Persist chat history and finished games
+- Replace the in-memory room server with a persistent backend
+- Replace mock purchases with Stripe, Paystack, Flutterwave, or another payment backend
+- Add authentication and reconnect-safe player identity
+- Add real deployment hosting for the API and frontend
