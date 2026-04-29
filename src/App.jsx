@@ -81,16 +81,27 @@ function App() {
       `/api/rooms/${session.roomCode}/events?token=${encodeURIComponent(session.playerToken)}`,
     )
 
-    stream.onopen = () => setConnectionState('connected')
-    stream.onmessage = (event) => {
-      const nextRoom = JSON.parse(event.data)
-      setRoom(nextRoom)
-      if (nextRoom.match?.diceValue) {
-        setLastDiceValue(nextRoom.match.diceValue)
-      }
+    stream.onopen = () => {
       setConnectionState('connected')
+      setErrorMessage('')
     }
-    stream.onerror = () => setConnectionState('reconnecting')
+    stream.onmessage = (event) => {
+      try {
+        const nextRoom = JSON.parse(event.data)
+        setRoom(nextRoom)
+        if (nextRoom.match?.diceValue) {
+          setLastDiceValue(nextRoom.match.diceValue)
+        }
+        setConnectionState('connected')
+        setErrorMessage('')
+      } catch (parseError) {
+        setErrorMessage('Failed to parse room update. Reload the page.')
+      }
+    }
+    stream.onerror = () => {
+      setConnectionState('reconnecting')
+      setErrorMessage('Connection lost. Make sure the local dev server is running and refresh the page.')
+    }
 
     return () => {
       stream.close()
@@ -302,8 +313,9 @@ function App() {
             <div className="notes-card">
               <strong>How to test on the same laptop</strong>
               <p>1. Run `npm run dev`.</p>
-              <p>2. Open `http://localhost:5173` and create a room.</p>
+              <p>2. Open `http://127.0.0.1:5173` or `http://localhost:5173` and create a room.</p>
               <p>3. Open another tab or window on the same laptop and enter the room code.</p>
+              <p>If the page fails, refresh and make sure both client and server are running.</p>
             </div>
 
             {errorMessage && <p className="error-banner">{errorMessage}</p>}
