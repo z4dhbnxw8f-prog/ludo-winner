@@ -546,6 +546,43 @@ textarea {
   background: rgba(255, 247, 237, 0.9);
 }
 
+.match-type-picker {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.size-chip,
+.room-chip {
+  border: 1px solid rgba(120, 113, 108, 0.18);
+  border-radius: 999px;
+  background: #fff;
+  color: #292524;
+  padding: 12px 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.size-chip:hover,
+.room-chip:hover {
+  transform: translateY(-1px);
+}
+
+.size-chip-active,
+.room-chip-active {
+  border-color: rgba(249, 115, 22, 0.55);
+  background: rgba(255, 247, 237, 0.96);
+  box-shadow: 0 18px 28px rgba(249, 115, 22, 0.12);
+}
+
+.room-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .join-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

@@ -39,7 +39,7 @@ function generateRoomCode() {
   return code
 }
 
-function createRoom({ playerName, mode, stake }) {
+function createRoom({ playerName, mode, stake, matchType }) {
   const roomCode = generateRoomCode()
   const hostToken = randomUUID()
   const playersBySeat = Object.fromEntries(
@@ -56,6 +56,7 @@ function createRoom({ playerName, mode, stake }) {
     roomCode,
     mode: mode || FREE_MODE,
     stake: Number(stake || DEFAULT_STAKE),
+    matchType: matchType || '1v1',
     status: 'waiting',
     playersBySeat,
     chatMessages: createInitialChat(
@@ -88,6 +89,7 @@ function getRoomView(room, token) {
     status: room.status,
     mode: room.mode,
     stake: room.stake,
+    matchType: room.matchType || '1v1',
     prizePool: room.match.prizePool,
     players: PLAYERS.map((player) => {
       const seatState = room.playersBySeat[player.id]
@@ -160,7 +162,7 @@ function maybeStartRoom(room) {
   addSystemMessage(
     room,
     room.mode === FREE_MODE
-      ? 'Both players are here. The 2-player match is live.'
+      ? `Both players are here. The ${room.matchType || '1v1'} match is live.`
       : `Both players posted ${room.stake} coins. The ${room.match.prizePool}-coin pot is live.`,
   )
 }

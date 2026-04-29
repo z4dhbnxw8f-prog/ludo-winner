@@ -62,6 +62,7 @@ function App() {
   const [playerName, setPlayerName] = useState('Crimson Crew')
   const [joinCode, setJoinCode] = useState('')
   const [selectedStake, setSelectedStake] = useState(DEFAULT_STAKE)
+  const [selectedMatchType, setSelectedMatchType] = useState('1v1')
   const [session, setSession] = useState(null)
   const [room, setRoom] = useState(null)
   const [draftMessage, setDraftMessage] = useState('')
@@ -116,6 +117,7 @@ function App() {
         playerName: playerName.trim() || 'Host Player',
         mode,
         stake: selectedStake,
+        matchType: selectedMatchType,
       })
       setSession({
         roomCode: payload.room.roomCode,
@@ -192,12 +194,11 @@ function App() {
       <main className="app-shell">
         <section className="hero-panel">
           <div>
-            <p className="eyebrow">2-player online multiplayer with chat</p>
+            <p className="eyebrow">Online multiplayer Ludo with instant dice</p>
             <h1>Ludo Winner</h1>
             <p className="hero-copy">
-              Create a room on one device, share the room code with a second device,
-              and play the same match in real time. The built-in room server keeps
-              turns, chat, and wagers in sync.
+              Create a room, choose the match format, share the code, and play live with a second device.
+              The game updates board state, chat, dice rolls, and turn order in real time.
             </p>
           </div>
         </section>
@@ -222,9 +223,26 @@ function App() {
 
             <div className="section-grid">
               <article className="table-section table-section-free">
+                <p className="section-kicker">Match type</p>
+                <h3>Choose a game format</h3>
+                <p>Select the exact team layout you want to play.</p>
+                <div className="match-type-picker">
+                  {['1v1', '2v2', '3v3', '4v4'].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      className={`size-chip ${selectedMatchType === option ? 'size-chip-active' : ''}`}
+                      onClick={() => setSelectedMatchType(option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </article>
+              <article className="table-section table-section-free">
                 <p className="section-kicker">Normal Games</p>
                 <h3>Create a free room</h3>
-                <p>Open a zero-cost room and invite one opponent from another device.</p>
+                <p>Open a zero-cost room and invite a matched opponent.</p>
                 <button
                   type="button"
                   className="primary-button full-width"
@@ -319,19 +337,9 @@ function App() {
               </strong>
             </div>
           </div>
-
-          <div className="action-buttons">
-            <button
-              type="button"
-              className="primary-button"
-              onClick={() => callRoomAction('roll')}
-              disabled={!isYourTurn || room.status !== 'ready' || room.match.diceValue !== null || isRolling}
-            >
-              Roll Dice
-            </button>
-            <button type="button" className="secondary-button" onClick={() => callRoomAction('reset')}>
-              Rematch
-            </button>
+          <div className="room-chip-group">
+            <span className="room-chip">{room.matchType || '1v1'} match</span>
+            <span className="room-chip">{room.mode === FREE_MODE ? 'Free play' : `${room.stake} coins`}</span>
           </div>
         </div>
 
