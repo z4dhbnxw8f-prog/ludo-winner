@@ -14,7 +14,7 @@ import {
 } from './src/gameCore.js'
 
 const PORT = Number(process.env.PORT || 3001)
-const HOST = process.env.HOST || '0.0.0.0'
+const HOST = process.env.HOST || '127.0.0.1'
 const rooms = new Map()
 const streams = new Map()
 
@@ -100,6 +100,7 @@ function getRoomView(room, token) {
         connected: seatState.connected,
         coins: seatState.coins,
         spentUsd: seatState.spentUsd,
+        wins: seatState.wins ?? 0,
         joined: Boolean(seatState.token),
       }
     }),
@@ -338,7 +339,12 @@ const server = http.createServer(async (request, response) => {
       return
     }
 
+    const previousWinner = room.match.winnerId
     room.match = applyMove(room.match, room.playersBySeat, seat, Number(body.tokenIndex))
+
+    if (room.match.winnerId && room.match.winnerId !== previousWinner) {
+      room.playersBySeat[room.match.winnerId].wins += 1
+    }
 
     if (room.match.winnerId && room.mode === STAKED_MODE) {
       room.playersBySeat[room.match.winnerId].coins += room.match.prizePool

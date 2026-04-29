@@ -41,11 +41,11 @@ async function request(path, body) {
   return payload
 }
 
-function DiceFace({ value, isRolling }) {
+function DiceFace({ value, isRolling, isSix }) {
   const pips = DICE_PIPS[value] ?? []
 
   return (
-    <div className={`dice-shell ${isRolling ? 'dice-shell-rolling' : ''}`}>
+    <div className={`dice-shell ${isRolling ? 'dice-shell-rolling' : ''} ${isSix ? 'dice-shell-six' : ''}`}>
       <div className="dice-face">
         {Array.from({ length: 9 }, (_, index) => (
           <span
@@ -108,6 +108,8 @@ function App() {
   const movableTokenIndexes = room
     ? getMovableTokenIndexes(yourSeat, room.match.tokensByPlayer, room.match.diceValue)
     : []
+  const diceValue = room?.match?.diceValue ?? lastDiceValue
+  const isSixRoll = diceValue === 6
 
   async function createRoom(mode) {
     try {
@@ -194,11 +196,11 @@ function App() {
       <main className="app-shell">
         <section className="hero-panel">
           <div>
-            <p className="eyebrow">Online multiplayer Ludo with instant dice</p>
+            <p className="eyebrow">Local laptop multiplayer with anime energy</p>
             <h1>Ludo Winner</h1>
             <p className="hero-copy">
-              Create a room, choose the match format, share the code, and play live with a second device.
-              The game updates board state, chat, dice rolls, and turn order in real time.
+              Create a room here, open a second tab or window on the same laptop,
+              and battle with the same live board, dice rolls, and chat feed.
             </p>
           </div>
         </section>
@@ -283,7 +285,7 @@ function App() {
             <div className="join-panel">
               <div>
                 <p className="panel-label">Join Room</p>
-                <h2>Already have a code?</h2>
+                <h2>Open a second tab on this laptop</h2>
               </div>
               <div className="join-row">
                 <input
@@ -298,10 +300,10 @@ function App() {
             </div>
 
             <div className="notes-card">
-              <strong>How to test on two devices</strong>
+              <strong>How to test on the same laptop</strong>
               <p>1. Run `npm run dev`.</p>
-              <p>2. Open the URL from your computer and create a room.</p>
-              <p>3. On the second device, visit the same computer IP and enter the room code.</p>
+              <p>2. Open `http://localhost:5173` and create a room.</p>
+              <p>3. Open another tab or window on the same laptop and enter the room code.</p>
             </div>
 
             {errorMessage && <p className="error-banner">{errorMessage}</p>}
@@ -315,19 +317,19 @@ function App() {
     <main className="app-shell">
       <section className="hero-panel">
         <div>
-          <p className="eyebrow">2-player online multiplayer with chat</p>
+          <p className="eyebrow">Local laptop multiplayer with anime energy</p>
           <h1>Ludo Winner</h1>
           <p className="hero-copy">
-            Room <strong>{room.roomCode}</strong> is live. Share that code with your
-            opponent and both devices will stay synced through the local room server.
+            Room <strong>{room.roomCode}</strong> is live. Open another browser tab on this laptop,
+            enter the same room code, and play the same match in real time.
           </p>
         </div>
 
         <div className="hero-actions">
-          <div className="dice-panel">
-            <DiceFace value={room.match.diceValue ?? lastDiceValue} isRolling={isRolling} />
+          <div className={`dice-panel ${isSixRoll ? 'dice-panel-six' : ''}`}>
+            <DiceFace value={diceValue} isRolling={isRolling} isSix={isSixRoll} />
             <div className="dice-copy">
-              <span>Live die</span>
+              <span>{isSixRoll ? 'Supreme charge' : 'Live die'}</span>
               <strong>
                 {isRolling
                   ? 'Rolling...'
@@ -393,6 +395,12 @@ function App() {
               <span className="board-seat-tag board-seat-red">Red Lane</span>
             </div>
 
+            <div className={`six-flare ${isSixRoll ? 'six-flare-active' : ''}`}>
+              {Array.from({ length: 8 }, (_, index) => (
+                <span key={index} className="six-flare-ray" />
+              ))}
+            </div>
+
             <div className="board">
             <div className="quadrant quadrant-red"></div>
             <div className="quadrant quadrant-green"></div>
@@ -449,7 +457,7 @@ function App() {
                         return (
                           <span
                             key={tokenEntry.tokenId}
-                            className={`token token-${tokenEntry.playerId} ${
+                            className={`token token-${tokenEntry.playerId} token-shape-${tokenEntry.tokenIndex} ${
                               canMove ? 'token-pulse' : ''
                             }`}
                             title={`${player.label} token ${tokenEntry.tokenIndex + 1}`}
@@ -472,7 +480,7 @@ function App() {
             <div className="sidebar-heading">
               <div>
                 <p className="panel-label">Players</p>
-                <h2>Two-device seats</h2>
+                <h2>Local seats</h2>
               </div>
             </div>
             <div className="player-list">
@@ -493,6 +501,24 @@ function App() {
                       {player.spentUsd.toFixed(2)} spent
                     </small>
                   </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="sidebar-card wins-card">
+            <div className="sidebar-heading">
+              <div>
+                <p className="panel-label">Win Tracker</p>
+                <h2>Match win grid</h2>
+              </div>
+            </div>
+            <div className="wins-grid">
+              {room.players.map((player) => (
+                <article key={player.seat} className="wins-cell">
+                  <strong>{player.wins ?? 0}</strong>
+                  <span>{player.name}</span>
+                  <small>{player.label} wins</small>
                 </article>
               ))}
             </div>
@@ -573,7 +599,7 @@ function App() {
                   rows="3"
                   value={draftMessage}
                   onChange={(event) => setDraftMessage(event.target.value)}
-                  placeholder="Send a message to the other device..."
+                  placeholder="Send a message to the other tab on this laptop..."
                 />
               </label>
 

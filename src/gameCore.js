@@ -147,6 +147,7 @@ export function createPlayerSeat(player, name) {
     name: name || player.defaultName,
     coins: 400,
     spentUsd: 0,
+    wins: 0,
     connected: false,
   }
 }
