@@ -14,6 +14,15 @@ import {
   getPlayerById,
 } from './gameCore.js'
 
+const DICE_PIPS = {
+  1: [5],
+  2: [1, 9],
+  3: [1, 5, 9],
+  4: [1, 3, 7, 9],
+  5: [1, 3, 5, 7, 9],
+  6: [1, 3, 4, 6, 7, 9],
+}
+
 async function request(path, body) {
   const response = await fetch(path, {
     method: 'POST',
@@ -32,6 +41,23 @@ async function request(path, body) {
   return payload
 }
 
+function DiceFace({ value, isRolling }) {
+  const pips = DICE_PIPS[value] ?? []
+
+  return (
+    <div className={`dice-shell ${isRolling ? 'dice-shell-rolling' : ''}`}>
+      <div className="dice-face">
+        {Array.from({ length: 9 }, (_, index) => (
+          <span
+            key={index}
+            className={`dice-pip ${pips.includes(index + 1) ? 'dice-pip-visible' : ''}`}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const [playerName, setPlayerName] = useState('Crimson Crew')
   const [joinCode, setJoinCode] = useState('')
@@ -42,6 +68,8 @@ function App() {
   const [errorMessage, setErrorMessage] = useState('')
   const [isBusy, setIsBusy] = useState(false)
   const [connectionState, setConnectionState] = useState('offline')
+  const [isRolling, setIsRolling] = useState(false)
+  const [lastDiceValue, setLastDiceValue] = useState(1)
 
   useEffect(() => {
     if (!session) {
@@ -54,7 +82,11 @@ function App() {
 
     stream.onopen = () => setConnectionState('connected')
     stream.onmessage = (event) => {
-      setRoom(JSON.parse(event.data))
+      const nextRoom = JSON.parse(event.data)
+      setRoom(nextRoom)
+      if (nextRoom.match?.diceValue) {
+        setLastDiceValue(nextRoom.match.diceValue)
+      }
       setConnectionState('connected')
     }
     stream.onerror = () => setConnectionState('reconnecting')
@@ -124,12 +156,21 @@ function App() {
 
     try {
       setErrorMessage('')
+      if (action === 'roll') {
+        setIsRolling(true)
+      }
       await request(`/api/rooms/${session.roomCode}/${action}`, {
         token: session.playerToken,
         ...body,
       })
     } catch (error) {
       setErrorMessage(error.message)
+    } finally {
+      if (action === 'roll') {
+        window.setTimeout(() => {
+          setIsRolling(false)
+        }, 850)
+      }
     }
   }
 
@@ -265,17 +306,33 @@ function App() {
         </div>
 
         <div className="hero-actions">
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() => callRoomAction('roll')}
-            disabled={!isYourTurn || room.status !== 'ready' || room.match.diceValue !== null}
-          >
-            {room.match.diceValue === null ? 'Roll Dice' : `Dice: ${room.match.diceValue}`}
-          </button>
-          <button type="button" className="secondary-button" onClick={() => callRoomAction('reset')}>
-            Rematch
-          </button>
+          <div className="dice-panel">
+            <DiceFace value={room.match.diceValue ?? lastDiceValue} isRolling={isRolling} />
+            <div className="dice-copy">
+              <span>Live die</span>
+              <strong>
+                {isRolling
+                  ? 'Rolling...'
+                  : room.match.diceValue === null
+                    ? `Last roll: ${lastDiceValue}`
+                    : `Current roll: ${room.match.diceValue}`}
+              </strong>
+            </div>
+          </div>
+
+          <div className="action-buttons">
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => callRoomAction('roll')}
+              disabled={!isYourTurn || room.status !== 'ready' || room.match.diceValue !== null || isRolling}
+            >
+              Roll Dice
+            </button>
+            <button type="button" className="secondary-button" onClick={() => callRoomAction('reset')}>
+              Rematch
+            </button>
+          </div>
         </div>
 
         <div className="status-grid">
@@ -311,9 +368,28 @@ function App() {
             </span>
           </div>
 
-          <div className="board">
+          <div className="board-frame">
+            <div className="board-side board-side-top">
+              <span className="board-seat-tag board-seat-green">Green Home</span>
+            </div>
+
+            <div className="board-side board-side-left">
+              <span className="board-seat-tag board-seat-red">Red Launch</span>
+            </div>
+
+            <div className="board-side board-side-right">
+              <span className="board-seat-tag board-seat-green">Green Lane</span>
+            </div>
+
+            <div className="board-side board-side-bottom">
+              <span className="board-seat-tag board-seat-red">Red Lane</span>
+            </div>
+
+            <div className="board">
             <div className="quadrant quadrant-red"></div>
             <div className="quadrant quadrant-green"></div>
+            <div className="track-ribbon track-ribbon-horizontal"></div>
+            <div className="track-ribbon track-ribbon-vertical"></div>
             <div className="goal-mark">DUEL</div>
 
             {BOARD_COORDS.map((coord) => {
@@ -379,6 +455,7 @@ function App() {
                 </button>
               )
             })}
+            </div>
           </div>
         </div>
 
